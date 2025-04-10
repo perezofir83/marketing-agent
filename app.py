@@ -1,4 +1,4 @@
-# Marketing Agent System with Streamlit Interface and secure API key entry
+# Marketing Agent System with Streamlit Buttons per Agent
 
 import requests
 from bs4 import BeautifulSoup
@@ -11,134 +11,83 @@ st.title("🚀 Marketing Agent System")
 
 # Secure API Key Entry
 openai_api_key = st.text_input("🔑 Enter your OpenAI API key (kept private)", type="password")
-
 url = st.text_input("🌐 Enter Website URL to Analyze")
 
 if openai_api_key:
     openai.api_key = openai_api_key
 
     if url:
-        with st.spinner("Analyzing website and generating plan..."):
+        with st.spinner("Fetching website content..."):
+            try:
+                response = requests.get(url)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                site_text = soup.get_text()
+            except Exception as e:
+                st.error(f"Failed to retrieve site content: {e}")
+                site_text = ""
 
-            class MarketingAgentSystem:
-                def __init__(self, website_url):
-                    self.website_url = website_url
-                    self.brand_data = {}
-                    self.google_ads_agent = GoogleAdsAgent()
-                    self.social_media_agent = SocialMediaAgent()
-                    self.media_content_agent = MediaContentAgent()
-                    self.campaign_ideas_agent = CampaignIdeasAgent()
-                    self.competitor_analysis_agent = CompetitorAnalysisAgent()
+        def ask_gpt(prompt):
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a senior digital marketing expert."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response['choices'][0]['message']['content']
 
-                def analyze_website(self):
-                    self.brand_data = self.extract_brand_info(self.website_url)
+        st.subheader("🤖 Choose which agent to run:")
 
-                def extract_brand_info(self, url):
-                    try:
-                        response = requests.get(url)
-                        soup = BeautifulSoup(response.text, 'html.parser')
-                        text = soup.get_text()
-                        gpt_summary = self.summarize_with_gpt(text)
-                        return gpt_summary
-                    except Exception as e:
-                        return {"error": str(e)}
+        if st.button("📢 Google Ads Agent"):
+            prompt = f"""You are a Google Ads expert. Analyze the following website content and:
+- Identify relevant keywords for ad campaigns
+- Propose ad groups and audience segmentation
+- Write 2 sample text ads
+- Suggest budget allocation strategy
 
-                def summarize_with_gpt(self, text):
-                    prompt = f"""
-                    Analyze the following website content and extract the following:
-                    - Brand name
-                    - Industry type
-                    - List of products or services
-                    - Brand tone and style
-                    - Relevant SEO keywords
+Website Content:
+{site_text[:4000]}
+"""
+            result = ask_gpt(prompt)
+            st.text_area("📢 Google Ads Plan", result, height=400)
 
-                    Website Content:
-                    {text[:4000]}
-                    """
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4",
-                        messages=[
-                            {"role": "system", "content": "You are a digital marketing analyst."},
-                            {"role": "user", "content": prompt}
-                        ]
-                    )
-                    return response["choices"][0]["message"]["content"]
+        if st.button("📝 Creative Content Agent"):
+            prompt = f"""You are a creative content strategist. Based on the website content below, generate:
+- 3 original post ideas for Instagram or TikTok
+- 1 video script idea (30 seconds)
+- A catchy slogan related to the brand
 
-                def run_agents_analysis(self):
-                    self.google_ads_agent.analyze(self.brand_data)
-                    self.social_media_agent.analyze(self.brand_data)
-                    self.media_content_agent.analyze(self.brand_data)
-                    self.campaign_ideas_agent.analyze(self.brand_data)
-                    self.competitor_analysis_agent.analyze(self.brand_data)
+Website Content:
+{site_text[:4000]}
+"""
+            result = ask_gpt(prompt)
+            st.text_area("📝 Creative Content Plan", result, height=400)
 
-                def should_work_with_brand(self):
-                    scores = [
-                        self.google_ads_agent.score,
-                        self.social_media_agent.score,
-                        self.media_content_agent.score,
-                        self.campaign_ideas_agent.score,
-                        self.competitor_analysis_agent.score
-                    ]
-                    return sum(scores) / len(scores) > 7
+        if st.button("📚 Content Marketing Agent"):
+            prompt = f"""You are a content marketing manager. Based on the website below, provide:
+- Blog post topic ideas (5)
+- 1 sample blog introduction (150 words)
+- SEO keyword suggestions
+- Suggestions for newsletter or thought leadership distribution
 
-                def generate_work_plan(self):
-                    return {
-                        "google_ads": self.google_ads_agent.generate_plan(),
-                        "social_media": self.social_media_agent.generate_plan(),
-                        "media_content": self.media_content_agent.generate_plan(),
-                        "campaigns": self.campaign_ideas_agent.generate_plan(),
-                        "competitors": self.competitor_analysis_agent.generate_plan(),
-                    }
+Website Content:
+{site_text[:4000]}
+"""
+            result = ask_gpt(prompt)
+            st.text_area("📚 Content Marketing Strategy", result, height=400)
 
-            class GoogleAdsAgent:
-                def analyze(self, brand_data):
-                    self.score = 8
-                def generate_plan(self):
-                    return ["Create Google Ads campaign with branded and generic keywords"]
+        if st.button("🕵️‍♂️ Competitor Intelligence Agent"):
+            prompt = f"""You are a competitor intelligence analyst. Given this website, assume it's a client's brand.
+Your task is to:
+- Suggest types of competitors they should monitor
+- Recommend tools or sources to track competitors
+- Propose what weekly insights they should collect
+- Output it as a report template
 
-            class SocialMediaAgent:
-                def analyze(self, brand_data):
-                    self.score = 7
-                def generate_plan(self):
-                    return ["Analyze current social profiles", "Open missing channels"]
-
-            class MediaContentAgent:
-                def analyze(self, brand_data):
-                    self.score = 6
-                def generate_plan(self):
-                    return ["Create brand story video", "Reels and product photos"]
-
-            class CampaignIdeasAgent:
-                def analyze(self, brand_data):
-                    self.score = 9
-                def generate_plan(self):
-                    return ["Back-to-school campaign", "Limited time promotions"]
-
-            class CompetitorAnalysisAgent:
-                def analyze(self, brand_data):
-                    self.score = 7.5
-                def generate_plan(self):
-                    return ["Track competitors", "Identify brand differentiators"]
-
-            system = MarketingAgentSystem(url)
-            summary = system.analyze_website()
-
-            if isinstance(summary, dict) and "error" in summary:
-                st.error(f"Error: {summary['error']}")
-            else:
-                st.subheader("🔍 Brand Summary")
-                st.text(summary)
-
-                system.run_agents_analysis()
-                if system.should_work_with_brand():
-                    st.success("✅ This brand is suitable to work with.")
-                    st.subheader("📋 Work Plan")
-                    work_plan = system.generate_work_plan()
-                    for section, tasks in work_plan.items():
-                        st.markdown(f"### {section.replace('_', ' ').title()}")
-                        for task in tasks:
-                            st.markdown(f"- {task}")
-                else:
-                    st.warning("🚫 This brand is not suitable at this time.")
+Website Content:
+{site_text[:4000]}
+"""
+            result = ask_gpt(prompt)
+            st.text_area("🕵️ Competitor Monitoring Plan", result, height=400)
 else:
     st.info("Please enter your OpenAI API key to begin.")
