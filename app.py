@@ -1,9 +1,9 @@
-# Marketing Agent System with Streamlit Buttons per Agent
+# Marketing Agent System with Streamlit Buttons per Agent (OpenAI API v1 compatible)
 
 import requests
 from bs4 import BeautifulSoup
-import openai
 import streamlit as st
+from openai import OpenAI
 
 # Streamlit App
 st.set_page_config(page_title="Marketing Agent System", layout="wide")
@@ -14,7 +14,7 @@ openai_api_key = st.text_input("🔑 Enter your OpenAI API key (kept private)", 
 url = st.text_input("🌐 Enter Website URL to Analyze")
 
 if openai_api_key:
-    openai.api_key = openai_api_key
+    client = OpenAI(api_key=openai_api_key)
 
     if url:
         with st.spinner("Fetching website content..."):
@@ -27,14 +27,14 @@ if openai_api_key:
                 site_text = ""
 
         def ask_gpt(prompt):
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a senior digital marketing expert."},
                     {"role": "user", "content": prompt}
                 ]
             )
-            return response['choices'][0]['message']['content']
+            return response.choices[0].message.content
 
         st.subheader("🤖 Choose which agent to run:")
 
